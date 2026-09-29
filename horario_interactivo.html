@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c0a09;
+            color: #d1d5db;
+        }
+        /* Custom subtle scrollbar for tables on small screens */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #171210;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #292524;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #44403c;
+        }
+
+        .class-cell.is-current {
+            background: rgba(163, 163, 163, 0.10);
+            box-shadow: inset 3px 0 0 rgba(212, 212, 212, 0.8);
+            position: relative;
+        }
+        .class-cell.is-current > div:first-child {
+            color: #f5f5f5;
+        }
+        .class-cell.is-current::after {
+            content: "AHORA";
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 8px;
+            letter-spacing: .14em;
+            color: #a3a3a3;
+            opacity: .9;
+        }
+        #now-card.is-active {
+            border-color: rgba(163, 163, 163, .45);
+            box-shadow: 0 0 24px rgba(163, 163, 163, .07);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between selection:bg-neutral-800 selection:text-neutral-200">
+
+    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex-grow flex flex-col justify-center">
+        
+        <!-- Subtle indicator/minimal time context -->
+        <div class="flex items-center justify-between mb-6 px-1">
+            <span id="current-day-indicator" class="text-xs font-medium uppercase tracking-wider text-neutral-500"></span>
+            <span id="current-time-indicator" class="text-xs text-neutral-600 font-mono"></span>
+        </div>
+
+
+        <!-- Live status -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+            <div id="now-card" class="rounded-2xl border border-neutral-800/80 bg-neutral-900/40 backdrop-blur-md px-5 py-4 transition-all duration-500">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs uppercase tracking-wider text-neutral-500">Ahora mismo</span>
+                    <span id="now-status" class="text-[10px] uppercase tracking-widest text-neutral-600"></span>
+                </div>
+                <div id="now-subject" class="text-lg font-medium text-neutral-200">Sin clase</div>
+                <div id="now-detail" class="text-xs text-neutral-500 mt-1">—</div>
+            </div>
+
+            <div class="rounded-2xl border border-neutral-800/80 bg-neutral-900/40 backdrop-blur-md px-5 py-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs uppercase tracking-wider text-neutral-500">Progreso del día</span>
+                    <span id="day-progress-text" class="text-xs font-mono text-neutral-500">0%</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                    <div id="day-progress-bar" class="h-full rounded-full bg-neutral-400 transition-all duration-700" style="width: 0%"></div>
+                </div>
+                <div id="day-progress-detail" class="text-xs text-neutral-600 mt-2">Sin jornada lectiva</div>
+            </div>
+        </div>
+
+        <div class="w-full overflow-x-auto rounded-2xl border border-neutral-800/80 bg-neutral-900/40 backdrop-blur-md shadow-2xl">
+            <table class="w-full text-left border-collapse min-w-[650px]">
+                <thead>
+                    <tr class="border-b border-neutral-800/80 text-neutral-400 text-xs font-medium uppercase tracking-wider">
+                        <th class="py-4 px-5 font-medium w-28 text-neutral-500">Hora</th>
+                        <th class="py-4 px-5 font-medium">Lunes</th>
+                        <th class="py-4 px-5 font-medium">Martes</th>
+                        <th class="py-4 px-5 font-medium">Miércoles</th>
+                        <th class="py-4 px-5 font-medium">Jueves</th>
+                        <th class="py-4 px-5 font-medium">Viernes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-800/40 text-sm">
+                    <!-- 08:10 - 09:00 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">08:10 - 09:00</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="08:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="08:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="08:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="08:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="08:00">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 09:00 - 09:50 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">09:00 - 09:50</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"> </div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="09:00">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 09:50 - 10:40 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">09:50 - 10:40</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="10:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="10:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="10:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="10:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="10:00">
+                            <div class="font-medium text-neutral-200">Marcas</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 10:40 - 11:30 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">10:40 - 11:30</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="09:00">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="09:00">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="09:00">
+                            <div class="font-medium text-neutral-200">Marcas</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- Break / Recreo -->
+                    <tr class="bg-neutral-900/20 text-neutral-600">
+                        <td class="py-3 px-5 font-mono text-xs whitespace-nowrap">11:30 - 12:00</td>
+                        <td colspan="5" class="py-3 px-5 text-center text-xs tracking-widest uppercase font-medium text-neutral-600">
+                            Descanso
+                        </td>
+                    </tr>
+
+                    <!-- 12:00 - 12:50 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">12:00 - 12:50</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="11:30">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="11:30">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="11:30">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="11:30">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="11:30">
+                            <div class="font-medium text-neutral-200"></div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 12:50 - 13:40 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">12:50 - 13:40</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="12:30">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="12:30">
+                            <div class="font-medium text-neutral-200">Marcas</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="12:30">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="12:30">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="12:30">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 13:40 - 14:30 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">13:40 - 14:30</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="09:00">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="2" data-time="09:00">
+                            <div class="font-medium text-neutral-200">Marcas</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="3" data-time="09:00">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="4" data-time="09:00">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                        <td class="py-4 px-5 class-cell" data-day="5" data-time="09:00">
+                            <div class="font-medium text-neutral-200">PAR</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+
+                    <!-- 14:30 - 15:20 -->
+                    <tr class="transition-colors hover:bg-neutral-800/20 group">
+                        <td class="py-4 px-5 text-neutral-500 font-mono text-xs whitespace-nowrap">14:30 - 15:20</td>
+                        <td class="py-4 px-5 class-cell" data-day="1" data-time="09:00">
+                            <div class="font-medium text-neutral-200">BDD</div>
+                            <div class="text-xs text-neutral-500 mt-0.5"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="w-full py-4 text-center text-xs text-neutral-600 border-t border-neutral-900">
+        <span>Horario clase</span>
+    </footer>
+
+<script>
+        const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+        function parseTime(value) {
+            const [hours, minutes] = value.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function getRowsForDay(day) {
+            return [...document.querySelectorAll('.class-cell[data-day="' + day + '"]')];
+        }
+
+        function getRowTimes(cell) {
+            const row = cell.closest('tr');
+            const timeText = row?.querySelector('td:first-child')?.textContent.trim() || '';
+            const match = timeText.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+            if (!match) return null;
+            return {
+                start: parseTime(match[1]),
+                end: parseTime(match[2]),
+                label: match[1] + ' - ' + match[2]
+            };
+        }
+
+        function getTodaySchedule(day) {
+            return getRowsForDay(day)
+                .map(cell => {
+                    const times = getRowTimes(cell);
+                    return times ? { cell, ...times } : null;
+                })
+                .filter(Boolean)
+                .sort((a, b) => a.start - b.start);
+        }
+
+        function updateLiveDashboard() {
+            const now = new Date();
+            const day = now.getDay();
+            const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+            document.getElementById('current-day-indicator').textContent =
+                now.toLocaleDateString('es-ES', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+            document.getElementById('current-time-indicator').textContent =
+                now.toLocaleTimeString('es-ES', {
+                    hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+
+            document.querySelectorAll('.class-cell.is-current').forEach(cell =>
+                cell.classList.remove('is-current')
+            );
+
+            const nowCard = document.getElementById('now-card');
+            const nowStatus = document.getElementById('now-status');
+            const nowSubject = document.getElementById('now-subject');
+            const nowDetail = document.getElementById('now-detail');
+            const progressText = document.getElementById('day-progress-text');
+            const progressBar = document.getElementById('day-progress-bar');
+            const progressDetail = document.getElementById('day-progress-detail');
+
+            if (day === 0 || day === 6) {
+                nowCard.classList.remove('is-active');
+                nowStatus.textContent = 'fin de semana';
+                nowSubject.textContent = 'No hay clase';
+                nowDetail.textContent = 'Disfruta del descanso ☕';
+                progressText.textContent = '0%';
+                progressBar.style.width = '0%';
+                progressDetail.textContent = 'Fin de semana';
+                return;
+            }
+
+            const schedule = getTodaySchedule(day);
+
+            if (!schedule.length) {
+                nowCard.classList.remove('is-active');
+                nowStatus.textContent = 'libre';
+                nowSubject.textContent = 'No hay clases';
+                nowDetail.textContent = 'Día libre';
+                progressText.textContent = '0%';
+                progressBar.style.width = '0%';
+                progressDetail.textContent = 'Sin jornada lectiva';
+                return;
+            }
+
+            const firstStart = schedule[0].start;
+            const lastEnd = Math.max(...schedule.map(item => item.end));
+            const progress = Math.max(0, Math.min(100,
+                ((minutesNow - firstStart) / (lastEnd - firstStart)) * 100
+            ));
+
+            progressText.textContent = Math.round(progress) + '%';
+            progressBar.style.width = progress + '%';
+
+            const current = schedule.find(item =>
+                minutesNow >= item.start && minutesNow < item.end
+            );
+
+            if (current) {
+                current.cell.classList.add('is-current');
+
+                const subject =
+                    current.cell.querySelector('div:first-child')?.textContent.trim() || 'Clase';
+
+                const remaining = Math.max(0, Math.ceil(current.end - minutesNow));
+                const elapsed = Math.max(0, Math.min(100,
+                    ((minutesNow - current.start) / (current.end - current.start)) * 100
+                ));
+
+                nowCard.classList.add('is-active');
+                nowStatus.textContent = 'en curso';
+                nowSubject.textContent = subject;
+                nowDetail.textContent = current.label + ' · quedan ' + remaining + ' min';
+                progressDetail.textContent = 'Clase actual: ' + Math.round(elapsed) + '% completada';
+            } else {
+                nowCard.classList.remove('is-active');
+
+                const next = schedule.find(item => item.start > minutesNow);
+
+                if (next) {
+                    const subject =
+                        next.cell.querySelector('div:first-child')?.textContent.trim() || 'Clase';
+                    const until = Math.ceil(next.start - minutesNow);
+
+                    nowStatus.textContent = 'siguiente';
+                    nowSubject.textContent = subject;
+                    nowDetail.textContent = next.label + ' · empieza en ' + until + ' min';
+                    progressDetail.textContent = 'Esperando la próxima clase';
+                } else if (minutesNow >= lastEnd) {
+                    nowStatus.textContent = 'terminado';
+                    nowSubject.textContent = '¡Jornada terminada!';
+                    nowDetail.textContent = 'Ya no tienes más clases hoy 🎉';
+                    progressText.textContent = '100%';
+                    progressBar.style.width = '100%';
+                    progressDetail.textContent = 'Has completado la jornada';
+                } else {
+                    nowStatus.textContent = 'libre';
+                    nowSubject.textContent = 'Tiempo libre';
+                    nowDetail.textContent = 'No hay clase en este momento';
+                    progressDetail.textContent = 'Tiempo libre';
+                }
+            }
+        }
+
+        updateLiveDashboard();
+        setInterval(updateLiveDashboard, 1000);
+    </script>
+</body>
+</html>
